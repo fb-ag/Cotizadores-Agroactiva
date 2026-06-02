@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Cotizador VF2 — Agricultura Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep:#0a1628;--bg-card:#0f2040;--bg-card2:#142952;--bg-input:#1a3360;
+    --border:rgba(255,255,255,0.10);--border-focus:#3b82f6;--amarillo:#FFD100;
+    --azul-btn:#2563eb;--texto:#ffffff;--texto-sub:rgba(255,255,255,0.55);
+    --texto-label:#93bbee;--verde:#22c55e;--rojo:#ef4444;
+    --success-bg:rgba(34,197,94,0.15);--danger-bg:rgba(239,68,68,0.15);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Inter',sans-serif;background:var(--bg-deep);color:var(--texto);min-height:100vh;padding-bottom:40px;}
+
+  /* TABS */
+  .tabs{background:var(--bg-card);border-bottom:1px solid var(--border);display:flex;position:sticky;top:0;z-index:100;}
+  .tab{flex:1;padding:14px 8px;font-size:13px;font-weight:600;color:var(--texto-sub);text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;}
+  .tab.active{color:var(--texto);border-bottom-color:var(--amarillo);}
+  .tab-icon{display:block;font-size:16px;margin-bottom:3px;}
+
+  /* HEADER dentro de cada tab */
+  .tab-header{background:var(--bg-card);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;gap:12px;}
+  .logo-badge{width:34px;height:34px;background:var(--amarillo);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:var(--bg-deep);flex-shrink:0;}
+  .tab-header-text h2{font-size:15px;font-weight:700;}
+  .tab-header-text p{font-size:11px;color:var(--texto-sub);margin-top:1px;}
+  .header-chip{margin-left:auto;background:rgba(255,209,0,0.15);color:var(--amarillo);font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,209,0,0.3);}
+
+  /* PAGES */
+  .page{display:none;}
+  .page.active{display:block;}
+  .main{padding:16px;max-width:480px;margin:0 auto;}
+
+  /* CARDS */
+  .card{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;margin-bottom:10px;overflow:hidden;}
+  .card-header{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+  .card-num{width:24px;height:24px;background:rgba(59,130,246,0.25);border:1px solid rgba(59,130,246,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#93c5fd;flex-shrink:0;}
+  .card-num.am{background:rgba(255,209,0,0.15);border-color:rgba(255,209,0,0.3);color:var(--amarillo);}
+  .card-titulo{font-size:13px;font-weight:600;}
+  .card-body{padding:14px 16px;}
+  .campo{margin-bottom:14px;}
+  .campo:last-child{margin-bottom:0;}
+  label{display:block;font-size:11px;font-weight:600;color:var(--texto-label);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:6px;}
+  select,input[type="number"],input[type="password"]{width:100%;padding:11px 14px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:14px;color:var(--texto);appearance:none;-webkit-appearance:none;transition:border-color 0.2s;}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2393bbee' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+  select:focus,input:focus{outline:none;border-color:var(--border-focus);}
+  select option{background:#0f2040;}
+  .precio-hint{margin-top:6px;font-size:11px;color:var(--texto-sub);}
+  .precio-hint b{color:#93c5fd;font-weight:600;}
+  .toggle-row{display:flex;gap:8px;}
+  .tog{flex:1;padding:10px 8px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--texto-sub);cursor:pointer;text-align:center;transition:all 0.15s;}
+  .tog.on-si{background:var(--success-bg);border-color:var(--verde);color:var(--verde);}
+  .tog.on-no{background:var(--danger-bg);border-color:var(--rojo);color:var(--rojo);}
+
+  /* RESUMEN COTIZADOR */
+  .resumen{background:var(--bg-card2);border:1px solid var(--border);border-radius:16px;margin-bottom:10px;overflow:hidden;}
+  .resumen-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:600;color:var(--texto-sub);text-transform:uppercase;letter-spacing:0.6px;}
+  .resumen-body{padding:6px 16px;}
+  .r-fila{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid rgba(255,255,255,0.05);gap:8px;}
+  .r-fila:last-child{border-bottom:none;}
+  .r-izq{flex:1;}
+  .r-nombre{font-size:13px;color:var(--texto-sub);}
+  .r-sub{font-size:11px;color:rgba(255,255,255,0.3);margin-top:2px;}
+  .r-der{text-align:right;flex-shrink:0;}
+  .r-lista{font-size:11px;color:rgba(255,255,255,0.3);margin-bottom:2px;}
+  .r-valor{font-size:14px;font-weight:600;color:var(--texto);}
+  .r-fila.neg .r-nombre{color:#fca5a5;}
+  .r-fila.neg .r-valor{color:#fca5a5;}
+  .desglose{padding:14px 16px;border-top:1px solid var(--border);background:rgba(0,0,0,0.2);}
+  .desglose-tit{font-size:10px;font-weight:600;color:var(--texto-sub);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;}
+  .d-fila{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;}
+  .d-nombre{color:var(--texto-sub);}
+  .d-valor{color:var(--texto);font-weight:500;}
+  .d-sep{border-top:1px solid var(--border);margin:6px 0;}
+  .d-fila.bold .d-nombre{color:rgba(255,255,255,0.8);font-weight:600;}
+  .d-fila.bold .d-valor{color:rgba(255,255,255,0.8);font-weight:600;}
+  .d-fila.canje .d-nombre,.d-fila.canje .d-valor{color:#fca5a5;}
+  .totales-cliente{margin:0 16px 16px;display:flex;flex-direction:column;gap:8px;}
+  .tc-fila{background:var(--bg-input);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;}
+  .tc-label{font-size:11px;color:var(--texto-sub);font-weight:500;}
+  .tc-valor{font-size:16px;font-weight:700;color:var(--texto);}
+  .tc-fila.principal{background:var(--amarillo);border-color:transparent;}
+  .tc-fila.principal .tc-label{color:var(--bg-deep);opacity:0.7;}
+  .tc-fila.principal .tc-valor{color:var(--bg-deep);font-size:24px;}
+  .com-btn{width:100%;padding:11px;background:transparent;border:1px dashed rgba(255,255,255,0.2);border-radius:10px;font-family:'Inter',sans-serif;font-size:13px;color:var(--texto-sub);cursor:pointer;margin-bottom:10px;transition:all 0.2s;}
+  .com-btn:hover{border-color:var(--azul-btn);color:#93c5fd;}
+  .com-panel{display:none;background:#071224;border:1px solid rgba(59,130,246,0.3);border-radius:16px;padding:16px;margin-bottom:10px;}
+  .com-panel.show{display:block;}
+  .com-ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+  .com-ph span{font-size:11px;font-weight:600;color:#60a5fa;text-transform:uppercase;letter-spacing:0.6px;}
+  .com-ph button{background:transparent;border:none;color:var(--texto-sub);cursor:pointer;font-size:18px;line-height:1;}
+  .c-fila{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;}
+  .c-fila:last-child{border-bottom:none;}
+  .c-nombre{color:var(--texto-sub);}
+  .c-valor{font-weight:600;color:#86efac;}
+  .c-fila.margen .c-valor{color:#93c5fd;}
+  .c-fila.ctotal{margin-top:8px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.1);border-bottom:none;}
+  .c-fila.ctotal .c-nombre{color:rgba(255,255,255,0.8);font-weight:600;}
+  .c-fila.ctotal .c-valor{color:var(--amarillo);font-size:18px;}
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px);}
+  .overlay.show{display:flex;}
+  .modal{background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:300px;}
+  .modal h3{font-size:17px;font-weight:700;margin-bottom:6px;}
+  .modal p{font-size:13px;color:var(--texto-sub);margin-bottom:16px;}
+  .modal input[type="password"]{text-align:center;letter-spacing:6px;font-size:20px;margin-bottom:10px;}
+  .modal-err{font-size:12px;color:var(--rojo);margin-bottom:10px;display:none;}
+  .modal-btns{display:flex;gap:8px;}
+  .btn-sec{flex:1;padding:10px;background:var(--bg-input);border:1px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:14px;color:var(--texto-sub);cursor:pointer;}
+  .btn-pri{flex:1;padding:10px;background:var(--azul-btn);border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;color:white;cursor:pointer;}
+  .btn-reset{width:100%;padding:12px;background:transparent;border:1px solid rgba(255,255,255,0.12);border-radius:10px;font-family:'Inter',sans-serif;font-size:14px;color:var(--texto-sub);cursor:pointer;margin-bottom:8px;transition:all 0.2s;}
+  .btn-reset:hover{border-color:var(--rojo);color:var(--rojo);}
+  .empty-msg{padding:16px 0;text-align:center;font-size:13px;color:var(--texto-sub);font-style:italic;}
+
+  /* ── FINANCIACIÓN ── */
+  .fin-precio-box{background:var(--amarillo);border-radius:14px;padding:16px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+  .fin-precio-box .fp-label{font-size:12px;font-weight:700;color:var(--bg-deep);opacity:0.65;text-transform:uppercase;letter-spacing:0.5px;}
+  .fin-precio-box .fp-valor{font-size:28px;font-weight:700;color:var(--bg-deep);}
+  .fin-precio-box .fp-sub{font-size:10px;color:var(--bg-deep);opacity:0.5;margin-top:2px;}
+
+  .input-usd{position:relative;}
+  .input-usd span{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--texto-sub);font-weight:600;pointer-events:none;}
+  .input-usd input{padding-left:46px;}
+  .input-ars span{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--texto-sub);font-weight:600;pointer-events:none;}
+  .input-ars input{padding-left:46px;}
+
+  /* barra suma % */
+  .pct-bar{height:8px;border-radius:4px;background:rgba(255,255,255,0.08);margin-bottom:6px;overflow:hidden;display:flex;}
+  .pct-bar-a{background:var(--azul-btn);transition:width 0.3s;}
+  .pct-bar-b{background:var(--verde);transition:width 0.3s;}
+  .pct-sum{font-size:11px;text-align:right;margin-bottom:14px;}
+  .pct-sum.ok{color:var(--verde);}
+  .pct-sum.err{color:var(--rojo);}
+
+  /* bloques cheques / pagares */
+  .bloque{background:var(--bg-card2);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:10px;}
+  .bloque-titulo{font-size:12px;font-weight:700;color:var(--texto-label);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .bloque-badge{background:rgba(59,130,246,0.2);color:#93c5fd;font-size:10px;padding:2px 8px;border-radius:10px;border:1px solid rgba(59,130,246,0.3);}
+  .bloque-badge.verde{background:rgba(34,197,94,0.15);color:var(--verde);border-color:rgba(34,197,94,0.3);}
+  .cuota-fila{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+  .cuota-fila:last-child{border-bottom:none;}
+  .cuota-label{font-size:13px;color:var(--texto-sub);}
+  .cuota-vals{text-align:right;}
+  .cuota-usd{font-size:11px;color:rgba(255,255,255,0.35);margin-bottom:2px;}
+  .cuota-ars{font-size:15px;font-weight:700;color:var(--texto);}
+  .cuota-ars.pagare{color:#86efac;}
+
+  .subtotal-fila{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+  .subtotal-label{font-size:11px;font-weight:600;color:var(--texto-sub);text-transform:uppercase;letter-spacing:0.4px;}
+  .subtotal-usd{font-size:13px;font-weight:700;color:var(--texto);}
+
+  .verificacion{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:12px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+  .verificacion.err{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.2);}
+  .ver-label{font-size:12px;color:var(--texto-sub);}
+  .ver-valor{font-size:14px;font-weight:700;color:var(--verde);}
+  .verificacion.err .ver-valor{color:var(--rojo);}
+</style>
+</head>
+<body>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" onclick="showTab('cotizador')">
+    <span class="tab-icon">🧮</span>Cotizador
+  </div>
+  <div class="tab" onclick="showTab('financiacion')">
+    <span class="tab-icon">💰</span>Financiación
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB 1: COTIZADOR
+═══════════════════════════════════════════════════════════ -->
+<div class="page active" id="page-cotizador">
+  <div class="tab-header">
+    <div class="logo-badge">AD</div>
+    <div class="tab-header-text"><h2>Cotizador VF2</h2><p>Agricultura Digital · Agroterra</p></div>
+    <div class="header-chip">CNH · RAVEN</div>
+  </div>
+  <div class="main">
+
+    <div class="card">
+      <div class="card-header"><div class="card-num">1</div><span class="card-titulo">Piloto Eléctrico</span></div>
+      <div class="card-body"><div class="campo">
+        <label>Modelo</label>
+        <select id="elec" onchange="calc()">
+          <option value="">— Sin piloto eléctrico —</option>
+          <option value="CR7_500S">Kit CR7 + 500S + DirecSteer · PN 92675994</option>
+          <option value="CR7_RS1">Kit CR7 + RS1 + DirecSteer · PN 92675993</option>
+          <option value="CR12_RS1">Kit CR12 + RS1 + DirecSteer · PN 92675992</option>
+        </select>
+        <div class="precio-hint" id="h-elec"></div>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-num">2</div><span class="card-titulo">Piloto Hidráulico</span></div>
+      <div class="card-body"><div class="campo">
+        <label>Modelo</label>
+        <select id="hid" onchange="calc()">
+          <option value="">— Sin piloto hidráulico —</option>
+          <option value="CR7_500S_H">Kit CR7+ / 500S + HDU · PN 92734828</option>
+          <option value="CR7_RS1_H">Kit CR7+ RS1 + HDU · PN 92734825</option>
+          <option value="CR12_RS1_H">Kit CR12 + RS1 + HDU · PN 92675995</option>
+        </select>
+        <div class="precio-hint" id="h-hid"></div>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-num">3</div><span class="card-titulo">Kit Columna de Dirección</span></div>
+      <div class="card-body"><div class="campo">
+        <label>Modelo</label>
+        <select id="col" onchange="calc()">
+          <option value="">— Sin kit de columna —</option>
+          <option value="PUMA_T7">Kit Plataforma Puma/T7 · PN 117-5025-407</option>
+          <option value="T4_T5">Kit CNH T4/T5 APH (T6) · PN 117-5025-449</option>
+          <option value="TL5_T5">Kit CNH TL5/T5.110s · PN 117-5025-441</option>
+        </select>
+        <div class="precio-hint" id="h-col"></div>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-num">4</div><span class="card-titulo">Señal de Corrección</span></div>
+      <div class="card-body"><div class="campo">
+        <label>Señal</label>
+        <select id="senal" onchange="calc()">
+          <option value="">— Sin señal —</option>
+          <optgroup label="PLM 1 · 15 cm (Cygnus / RS1)">
+            <option value="PLM1_1A">PLM 1 — 15 cm — 1 año · PN 48024525</option>
+            <option value="PLM1_3A">PLM 1 — 15 cm — 3 años · PN 92245714</option>
+          </optgroup>
+          <optgroup label="PLM 3 · 3 cm (Cygnus / RS1)">
+            <option value="PLM3_3M">PLM 3 — 3 cm — 3 meses · PN 51668571</option>
+            <option value="PLM3_1A">PLM 3 — 3 cm — 1 año · PN 51668573</option>
+            <option value="PLM3_3A">PLM 3 — 3 cm — 3 años · PN 51668576</option>
+          </optgroup>
+          <optgroup label="GS 500S · 4 cm (500S)">
+            <option value="GS_3M">GS 500S — 4 cm — 3 meses · PN 077-0180-243U</option>
+            <option value="GS_1A">GS 500S — 4 cm — 1 año · PN 077-0180-237U</option>
+            <option value="GS_3A">GS 500S — 4 cm — 3 años · PN 077-0180-238U</option>
+            <option value="GSLITE">Desbloqueo GS-LITE 500S — 15 cm — Vitalicia · PN 077-0180-236U</option>
+          </optgroup>
+        </select>
+        <div class="precio-hint" id="h-senal"></div>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-num">5</div><span class="card-titulo">Funcionalidades</span></div>
+      <div class="card-body"><div class="campo">
+        <label>Función</label>
+        <select id="func" onchange="calc()">
+          <option value="">— Sin funcionalidad —</option>
+          <option value="AUTOTURN">Maniobra Automática de Cabecera — CRx AutoTurn · PN 077-0180-318U</option>
+        </select>
+        <div class="precio-hint" id="h-func"></div>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-num am">6</div><span class="card-titulo">Extras</span></div>
+      <div class="card-body">
+        <div class="campo">
+          <label>Plan Canje</label>
+          <div class="toggle-row">
+            <button class="tog on-no" id="t-canje-no" onclick="tog('canje','NO')">NO</button>
+            <button class="tog" id="t-canje-si" onclick="tog('canje','SI')">SÍ · −USD 4.500</button>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Estría</label>
+          <div class="toggle-row">
+            <button class="tog on-no" id="t-estria-no" onclick="tog('estria','NO')">NO</button>
+            <button class="tog" id="t-estria-si" onclick="tog('estria','SI')">SÍ · +USD 675 (+ IVA 21%)</button>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Servicio</label>
+          <div class="toggle-row">
+            <button class="tog on-no" id="t-servicio-no" onclick="tog('servicio','NO')">NO</button>
+            <button class="tog" id="t-servicio-si" onclick="tog('servicio','SI')">SÍ · +USD 800 (+ IVA 21%)</button>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Viáticos (km recorridos)</label>
+          <input type="number" id="viaticos" placeholder="0" min="0" oninput="calc()" />
+          <div class="precio-hint" id="h-viat"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="resumen" id="resumen-panel">
+      <div class="resumen-header">Resumen de cotización</div>
+      <div class="resumen-body" id="resumen-items">
+        <div class="empty-msg">Seleccioná al menos un producto para ver el resumen</div>
+      </div>
+      <div class="desglose" id="desglose" style="display:none">
+        <div class="desglose-tit">Desglose impositivo</div>
+        <div class="d-fila"><span class="d-nombre">Subtotal lista (sin IVA)</span><span class="d-valor" id="d-lista">USD 0</span></div>
+        <div class="d-fila"><span class="d-nombre">IVA 10,5%</span><span class="d-valor" id="d-iva105">USD 0</span></div>
+        <div class="d-fila"><span class="d-nombre">IVA 21%</span><span class="d-valor" id="d-iva21">USD 0</span></div>
+        <div class="d-fila canje" id="fila-canje" style="display:none">
+          <span class="d-nombre">Plan Canje</span><span class="d-valor">− USD 4.500,00</span>
+        </div>
+        <div class="d-sep"></div>
+        <div class="d-fila bold"><span class="d-nombre">Total sin IVA</span><span class="d-valor" id="d-sin-iva">USD 0</span></div>
+        <div class="d-fila bold"><span class="d-nombre">Total con IVA</span><span class="d-valor" id="d-con-iva">USD 0</span></div>
+      </div>
+      <div class="totales-cliente" id="totales-cliente" style="display:none">
+        <div class="tc-fila">
+          <span class="tc-label">Precio sin IVA (informativo)</span>
+          <span class="tc-valor" id="tc-sin-iva">USD 0</span>
+        </div>
+        <div class="tc-fila principal">
+          <span class="tc-label">Total cliente · IVA incluido</span>
+          <span class="tc-valor" id="tc-con-iva">USD 0</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="com-btn" onclick="abrirModal()">🔒 Ver comisión y margen</button>
+    <div class="com-panel" id="com-panel">
+      <div class="com-ph">
+        <span>📊 Comisión & Margen interno</span>
+        <button onclick="cerrarCom()">✕</button>
+      </div>
+      <div id="com-items"></div>
+    </div>
+    <button class="btn-reset" onclick="resetear()">↺ Nueva cotización</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     TAB 2: FINANCIACIÓN
+═══════════════════════════════════════════════════════════ -->
+<div class="page" id="page-financiacion">
+  <div class="tab-header">
+    <div class="logo-badge">AD</div>
+    <div class="tab-header-text"><h2>Financiación Propia</h2><p>Agroterra S.A.</p></div>
+    <div class="header-chip">CALC</div>
+  </div>
+  <div class="main">
+
+    <!-- Precio total -->
+    <div class="card">
+      <div class="card-header"><div class="card-num am">$</div><span class="card-titulo">Precio total del equipo</span></div>
+      <div class="card-body">
+        <div class="campo">
+          <label>Precio en USD (con IVA)</label>
+          <div class="input-usd" style="position:relative">
+            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--texto-sub);font-weight:600;">USD</span>
+            <input type="number" id="f-precio" placeholder="0,00" min="0" step="0.01" oninput="calcFin()" style="padding-left:56px;" />
+          </div>
+          <div class="precio-hint" style="margin-top:6px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:11px;color:var(--texto-sub);">¿Usar total del cotizador?</span>
+            <button onclick="usarTotalCotizador()" style="background:rgba(255,209,0,0.15);border:1px solid rgba(255,209,0,0.3);color:var(--amarillo);font-size:11px;font-weight:600;padding:3px 10px;border-radius:8px;cursor:pointer;font-family:Inter,sans-serif;">Traer →</button>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Tipo de cambio hoy ($ / USD) — Banco Nación</label>
+          <div style="position:relative">
+            <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:13px;color:var(--texto-sub);font-weight:600;">$</span>
+            <input type="number" id="f-tc" placeholder="1.415,00" min="0" step="0.01" oninput="calcFin()" style="padding-left:36px;" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Porcentajes -->
+    <div class="card">
+      <div class="card-header"><div class="card-num">%</div><span class="card-titulo">Distribución del pago</span></div>
+      <div class="card-body">
+        <div class="pct-bar">
+          <div class="pct-bar-a" id="bar-a" style="width:35%"></div>
+          <div class="pct-bar-b" id="bar-b" style="width:65%"></div>
+        </div>
+        <div class="pct-sum ok" id="pct-sum">35% + 65% = 100% ✓</div>
+        <div class="campo">
+          <label>% Entrada (cheques pesificados)</label>
+          <input type="number" id="f-pct-a" value="35" min="0" max="100" step="1" oninput="sincronizarPct('a')" />
+        </div>
+        <div class="campo">
+          <label>% Saldo (pagarés en USD sin interés)</label>
+          <input type="number" id="f-pct-b" value="65" min="0" max="100" step="1" oninput="sincronizarPct('b')" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado -->
+    <div id="fin-resultado" style="display:none">
+
+      <!-- PRECIO BOX -->
+      <div class="fin-precio-box">
+        <div>
+          <div class="fp-label">Precio total</div>
+          <div class="fp-sub">con IVA incluido</div>
+        </div>
+        <div class="fp-valor" id="fp-total">USD 0</div>
+      </div>
+
+      <!-- BLOQUE CHEQUES -->
+      <div class="bloque">
+        <div class="bloque-titulo">
+          📋 Entrega — Cheques pesificados
+          <span class="bloque-badge" id="badge-pct-a">35%</span>
+        </div>
+        <div class="cuota-fila">
+          <span class="cuota-label">Cheque 30 días</span>
+          <div class="cuota-vals">
+            <div class="cuota-usd" id="ch-usd">USD 0</div>
+            <div class="cuota-ars" id="ch-30">$ 0</div>
+          </div>
+        </div>
+        <div class="cuota-fila">
+          <span class="cuota-label">Cheque 60 días</span>
+          <div class="cuota-vals">
+            <div class="cuota-usd" style="visibility:hidden">-</div>
+            <div class="cuota-ars" id="ch-60">$ 0</div>
+          </div>
+        </div>
+        <div class="cuota-fila">
+          <span class="cuota-label">Cheque 90 días</span>
+          <div class="cuota-vals">
+            <div class="cuota-usd" style="visibility:hidden">-</div>
+            <div class="cuota-ars" id="ch-90">$ 0</div>
+          </div>
+        </div>
+        <div class="subtotal-fila">
+          <span class="subtotal-label">Subtotal entrada</span>
+          <span class="subtotal-usd" id="sub-cheques">USD 0</span>
+        </div>
+      </div>
+
+      <!-- BLOQUE PAGARÉS -->
+      <div class="bloque">
+        <div class="bloque-titulo">
+          📄 Saldo — Pagarés en USD
+          <span class="bloque-badge verde" id="badge-pct-b">65%</span>
+        </div>
+        <div id="pagares-lista"></div>
+        <div class="subtotal-fila">
+          <span class="subtotal-label">Subtotal saldo</span>
+          <span class="subtotal-usd" id="sub-pagares">USD 0</span>
+        </div>
+      </div>
+
+      <!-- VERIFICACIÓN -->
+      <div class="verificacion" id="verificacion">
+        <div>
+          <div class="ver-label">Cheques + Pagarés</div>
+          <div style="font-size:11px;color:var(--texto-sub);margin-top:2px;">debe igualar el total</div>
+        </div>
+        <div class="ver-valor" id="ver-valor">= USD 0</div>
+      </div>
+
+    </div>
+
+    <div id="fin-empty" style="text-align:center;padding:40px 20px;color:var(--texto-sub);font-size:13px;font-style:italic;">
+      Completá el precio y el tipo de cambio para ver el plan de financiación
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL CONTRASEÑA -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3>🔐 Área privada</h3>
+    <p>Ingresá la contraseña para ver comisión y margen</p>
+    <input type="password" id="inp-pass" placeholder="••••" maxlength="10" onkeydown="if(event.key==='Enter')chkPass()" />
+    <div class="modal-err" id="modal-err">Contraseña incorrecta</div>
+    <div class="modal-btns">
+      <button class="btn-sec" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-pri" onclick="chkPass()">Ingresar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════
+function showTab(t) {
+  document.querySelectorAll('.tab').forEach((el,i) => el.classList.toggle('active', ['cotizador','financiacion'][i]===t));
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-'+t).classList.add('active');
+}
+
+// ══════════════════════════════════════════════════════
+// COTIZADOR
+// ══════════════════════════════════════════════════════
+const P = {
+  'CR7_500S'  :{d:'Kit CR7 + 500S + DirecSteer',   lista:9900.70,  costo:7920.56,  iva:0.105},
+  'CR7_RS1'   :{d:'Kit CR7 + RS1 + DirecSteer',    lista:12284.54, costo:9827.63,  iva:0.105},
+  'CR12_RS1'  :{d:'Kit CR12 + RS1 + DirecSteer',   lista:13486.39, costo:10789.11, iva:0.105},
+  'CR7_500S_H':{d:'Kit CR7+/500S + HDU',           lista:10467.29, costo:8373.83,  iva:0.105},
+  'CR7_RS1_H' :{d:'Kit CR7+ RS1 + HDU',            lista:12841.24, costo:10272.99, iva:0.105},
+  'CR12_RS1_H':{d:'Kit CR12 + RS1 + HDU',          lista:14414.78, costo:11531.82, iva:0.105},
+  'PUMA_T7'   :{d:'Kit Plataforma Puma/T7',        lista:1452.58,  costo:1162.06,  iva:0.21},
+  'T4_T5'     :{d:'Kit CNH T4/T5 APH (T6)',        lista:1294.93,  costo:1035.94,  iva:0.21},
+  'TL5_T5'    :{d:'Kit CNH TL5/T5.110s',           lista:1578.85,  costo:1263.08,  iva:0.21},
+  'PLM1_1A'   :{d:'PLM 1 — 15 cm — 1 año',         lista:450,      costo:360,      iva:0.21},
+  'PLM1_3A'   :{d:'PLM 1 — 15 cm — 3 años',        lista:900,      costo:720,      iva:0.21},
+  'PLM3_3M'   :{d:'PLM 3 — 3 cm — 3 meses',        lista:800,      costo:640,      iva:0.21},
+  'PLM3_1A'   :{d:'PLM 3 — 3 cm — 1 año',          lista:1300,     costo:1040,     iva:0.21},
+  'PLM3_3A'   :{d:'PLM 3 — 3 cm — 3 años',         lista:2600,     costo:2080,     iva:0.21},
+  'GS_3M'     :{d:'GS 500S — 4 cm — 3 meses',      lista:720,      costo:576,      iva:0.21},
+  'GS_1A'     :{d:'GS 500S — 4 cm — 1 año',        lista:1750,     costo:1400,     iva:0.21},
+  'GS_3A'     :{d:'GS 500S — 4 cm — 3 años',       lista:5200,     costo:4160,     iva:0.21},
+  'GSLITE'    :{d:'Desbloqueo GS-LITE 500S — Vit.', lista:700,      costo:560,      iva:0.21},
+  'AUTOTURN'  :{d:'CRx AutoTurn',                   lista:450,      costo:360,      iva:0.21},
+};
+const T = {canje:'NO', estria:'NO', servicio:'NO'};
+const PASS = '1515';
+let totalConIvaGlobal = 0;
+
+function tog(c,v) {
+  T[c]=v;
+  ['si','no'].forEach(s=>{
+    const b=document.getElementById('t-'+c+'-'+s);
+    b.className='tog';
+    if(s==='si'&&v==='SI')b.classList.add('on-si');
+    if(s==='no'&&v==='NO')b.classList.add('on-no');
+  });
+  calc();
+}
+function fmt(n){return'USD '+n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtARS(n){return'$ '+n.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function hint(id,v){
+  const el=document.getElementById(id);
+  if(!v){el.innerHTML='';return;}
+  const p=P[v];
+  el.innerHTML='Lista: <b>'+fmt(p.lista)+'</b> · Con IVA '+(p.iva===0.105?'10,5':'21')+'%: <b>'+fmt(p.lista*(1+p.iva))+'</b>';
+}
+
+function calc() {
+  ['elec','hid','col','senal','func'].forEach(id=>hint('h-'+id,document.getElementById(id).value));
+  const km=parseFloat(document.getElementById('viaticos').value)||0;
+  const vLista=km*1.2, vIva=vLista*0.21, vConIva=vLista+vIva;
+  const hv=document.getElementById('h-viat');
+  hv.innerHTML=km>0?'Neto: <b>'+fmt(vLista)+'</b> · Con IVA 21%: <b>'+fmt(vConIva)+'</b>':'';
+
+  const keys=['elec','hid','col','senal','func'].map(id=>document.getElementById(id).value).filter(Boolean);
+  let sumLista=0,sumIva105=0,sumIva21=0,sumCosto=0;
+  const hi=[],hc=[];
+  let tiene=false;
+
+  keys.forEach(k=>{
+    const p=P[k], ivaAmt=p.lista*p.iva, conIva=p.lista+ivaAmt;
+    if(p.iva===0.105){sumIva105+=ivaAmt;}else{sumIva21+=ivaAmt;}
+    sumLista+=p.lista; sumCosto+=p.costo; tiene=true;
+    hi.push('<div class="r-fila"><div class="r-izq"><div class="r-nombre">'+p.d+'</div><div class="r-sub">IVA '+(p.iva===0.105?'10,5':'21')+'%</div></div><div class="r-der"><div class="r-lista">Lista: '+fmt(p.lista)+'</div><div class="r-valor">'+fmt(conIva)+'</div></div></div>');
+    hc.push('<div class="c-fila"><span class="c-nombre">'+p.d+'</span><span class="c-valor">'+fmt(p.lista*0.08)+'</span></div>');
+  });
+  if(T.estria==='SI'){sumLista+=675;sumIva21+=675*0.21;tiene=true;hi.push('<div class="r-fila"><div class="r-izq"><div class="r-nombre">Estría</div><div class="r-sub">IVA 21%</div></div><div class="r-der"><div class="r-lista">Lista: '+fmt(675)+'</div><div class="r-valor">'+fmt(675*1.21)+'</div></div></div>');}
+  if(T.servicio==='SI'){sumLista+=800;sumIva21+=800*0.21;tiene=true;hi.push('<div class="r-fila"><div class="r-izq"><div class="r-nombre">Servicio</div><div class="r-sub">IVA 21%</div></div><div class="r-der"><div class="r-lista">Lista: '+fmt(800)+'</div><div class="r-valor">'+fmt(800*1.21)+'</div></div></div>');}
+  if(vLista>0){sumLista+=vLista;sumIva21+=vIva;tiene=true;hi.push('<div class="r-fila"><div class="r-izq"><div class="r-nombre">Viáticos ('+km+' km)</div><div class="r-sub">IVA 21%</div></div><div class="r-der"><div class="r-lista">Lista: '+fmt(vLista)+'</div><div class="r-valor">'+fmt(vConIva)+'</div></div></div>');}
+  const canje=T.canje==='SI'?-4500:0;
+  if(T.canje==='SI'){tiene=true;hi.push('<div class="r-fila neg"><div class="r-izq"><div class="r-nombre">Plan Canje</div><div class="r-sub">Sin IVA</div></div><div class="r-der"><div class="r-lista">&nbsp;</div><div class="r-valor">− USD 4.500,00</div></div></div>');}
+
+  const totalLista=sumLista+canje;
+  const totalIva=sumIva105+sumIva21;
+  const totalConIva=sumLista+totalIva+canje;
+  totalConIvaGlobal=totalConIva;
+
+  document.getElementById('resumen-items').innerHTML=tiene?hi.join(''):'<div class="empty-msg">Seleccioná al menos un producto para ver el resumen</div>';
+  const desg=document.getElementById('desglose'),tots=document.getElementById('totales-cliente');
+  if(tiene){
+    desg.style.display='block';tots.style.display='flex';
+    document.getElementById('d-lista').textContent=fmt(sumLista);
+    document.getElementById('d-iva105').textContent=fmt(sumIva105);
+    document.getElementById('d-iva21').textContent=fmt(sumIva21);
+    document.getElementById('fila-canje').style.display=T.canje==='SI'?'flex':'none';
+    document.getElementById('d-sin-iva').textContent=fmt(totalLista);
+    document.getElementById('d-con-iva').textContent=fmt(totalConIva);
+    document.getElementById('tc-sin-iva').textContent=fmt(totalLista);
+    document.getElementById('tc-con-iva').textContent=fmt(totalConIva);
+  }else{desg.style.display='none';tots.style.display='none';}
+
+  const comTotal=keys.reduce((s,k)=>s+P[k].lista*0.08,0);
+  const margen=totalConIva-sumCosto;
+  if(hc.length){
+    hc.push('<div class="c-fila ctotal"><span class="c-nombre">Comisión total (8%)</span><span class="c-valor">'+fmt(comTotal)+'</span></div>');
+    hc.push('<div class="c-fila margen"><span class="c-nombre">Margen estimado</span><span class="c-valor">'+fmt(margen)+'</span></div>');
+  }
+  document.getElementById('com-items').innerHTML=hc.join('')||'<div style="color:var(--texto-sub);font-size:13px;font-style:italic">Sin productos seleccionados</div>';
+}
+
+function abrirModal(){document.getElementById('overlay').classList.add('show');document.getElementById('inp-pass').value='';document.getElementById('modal-err').style.display='none';setTimeout(()=>document.getElementById('inp-pass').focus(),150);}
+function cerrarModal(){document.getElementById('overlay').classList.remove('show');}
+function chkPass(){if(document.getElementById('inp-pass').value===PASS){cerrarModal();document.getElementById('com-panel').classList.add('show');}else{document.getElementById('modal-err').style.display='block';document.getElementById('inp-pass').value='';document.getElementById('inp-pass').focus();}}
+function cerrarCom(){document.getElementById('com-panel').classList.remove('show');}
+function resetear(){['elec','hid','col','senal','func'].forEach(id=>document.getElementById(id).value='');document.getElementById('viaticos').value='';tog('canje','NO');tog('estria','NO');tog('servicio','NO');calc();}
+
+// ══════════════════════════════════════════════════════
+// FINANCIACIÓN
+// ══════════════════════════════════════════════════════
+function usarTotalCotizador(){
+  if(totalConIvaGlobal>0){
+    document.getElementById('f-precio').value=totalConIvaGlobal.toFixed(2);
+    showTab('financiacion');
+    calcFin();
+  } else {
+    alert('Primero completá el cotizador para tener un total.');
+  }
+}
+
+function sincronizarPct(origen){
+  const a=document.getElementById('f-pct-a');
+  const b=document.getElementById('f-pct-b');
+  let va=parseFloat(a.value)||0;
+  let vb=parseFloat(b.value)||0;
+  if(origen==='a'){
+    vb=Math.max(0,Math.min(100,100-va));
+    b.value=vb;
+  } else {
+    va=Math.max(0,Math.min(100,100-vb));
+    a.value=va;
+  }
+  const suma=va+vb;
+  const bar=document.getElementById('bar-a');
+  const barb=document.getElementById('bar-b');
+  bar.style.width=va+'%';
+  barb.style.width=vb+'%';
+  const ps=document.getElementById('pct-sum');
+  if(Math.round(suma)===100){ps.textContent=va+'% + '+vb+'% = 100% ✓';ps.className='pct-sum ok';}
+  else{ps.textContent=va+'% + '+vb+'% = '+suma+'% ✗';ps.className='pct-sum err';}
+  calcFin();
+}
+
+function calcFin(){
+  const precio=parseFloat(document.getElementById('f-precio').value)||0;
+  const tc=parseFloat(document.getElementById('f-tc').value)||0;
+  const pctA=(parseFloat(document.getElementById('f-pct-a').value)||0)/100;
+  const pctB=(parseFloat(document.getElementById('f-pct-b').value)||0)/100;
+
+  // actualizar barra
+  document.getElementById('bar-a').style.width=(pctA*100)+'%';
+  document.getElementById('bar-b').style.width=(pctB*100)+'%';
+  const suma=Math.round((pctA+pctB)*100);
+  const ps=document.getElementById('pct-sum');
+  if(suma===100){ps.textContent=(pctA*100)+'% + '+(pctB*100)+'% = 100% ✓';ps.className='pct-sum ok';}
+  else{ps.textContent=(pctA*100)+'% + '+(pctB*100)+'% = '+suma+'% ✗';ps.className='pct-sum err';}
+
+  if(precio<=0||tc<=0){
+    document.getElementById('fin-resultado').style.display='none';
+    document.getElementById('fin-empty').style.display='block';
+    return;
+  }
+  document.getElementById('fin-resultado').style.display='block';
+  document.getElementById('fin-empty').style.display='none';
+
+  const montoA=precio*pctA;  // USD entrada
+  const montoB=precio*pctB;  // USD saldo pagarés
+
+  // Cheques: montoA en USD dividido en 3 partes iguales, pesificado al tc
+  const cuotaUSD=montoA/3;
+  const cuotaARS=cuotaUSD*tc;
+
+  document.getElementById('fp-total').textContent=fmt(precio);
+  document.getElementById('badge-pct-a').textContent=Math.round(pctA*100)+'%';
+  document.getElementById('badge-pct-b').textContent=Math.round(pctB*100)+'%';
+  document.getElementById('ch-usd').textContent=fmt(cuotaUSD)+' c/u';
+  document.getElementById('ch-30').textContent=fmtARS(cuotaARS);
+  document.getElementById('ch-60').textContent=fmtARS(cuotaARS);
+  document.getElementById('ch-90').textContent=fmtARS(cuotaARS);
+  document.getElementById('sub-cheques').textContent=fmt(montoA);
+
+  // Pagarés: montoB dividido en 4 pagarés semestrales en USD
+  const pagaréUSD=montoB/4;
+  const meses=['1er pagaré (6 meses)','2do pagaré (12 meses)','3er pagaré (18 meses)','4to pagaré (24 meses)'];
+  let htmlPag='';
+  meses.forEach(m=>{
+    htmlPag+=`<div class="cuota-fila">
+      <span class="cuota-label">${m}</span>
+      <div class="cuota-vals">
+        <div class="cuota-usd">&nbsp;</div>
+        <div class="cuota-ars pagare">${fmt(pagaréUSD)}</div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('pagares-lista').innerHTML=htmlPag;
+  document.getElementById('sub-pagares').textContent=fmt(montoB);
+
+  // Verificación
+  const totalCheck=montoA+montoB;
+  const ver=document.getElementById('verificacion');
+  document.getElementById('ver-valor').textContent='= '+fmt(totalCheck);
+  if(Math.abs(totalCheck-precio)<0.02){ver.classList.remove('err');}else{ver.classList.add('err');}
+}
+
+calc();
+calcFin();
+</script>
+</body>
+</html>
